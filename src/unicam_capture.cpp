@@ -45,14 +45,17 @@ int main(int argc, char* argv[])
     // ── 2) 센서 설정 ─────────────────────────────────────────
     {
         int raw_sfd = ::open("/dev/v4l-subdev0", O_RDWR);
+        FileDescriptor fd_sensor(raw_sfd);
         if (raw_sfd >= 0) {
-            FileDescriptor fd_sensor(raw_sfd);
             setSensorCtrl(fd_sensor.get(), V4L2_CID_EXPOSURE,      1500, "exposure");
-            setSensorCtrl(fd_sensor.get(), V4L2_CID_ANALOGUE_GAIN, 300,  "analogue_gain");
+            setSensorCtrl(fd_sensor.get(), V4L2_CID_ANALOGUE_GAIN, 200,  "analogue_gain");
             setSensorCtrl(fd_sensor.get(), V4L2_CID_VFLIP,         0,    "vflip");
         } else {
             printf("[WARN] /dev/v4l-subdev0 open failed, skipping sensor ctrl\n");
         }
+        validSensorCtrl(fd_sensor.get(), V4L2_CID_EXPOSURE,      1500, "exposure");
+        validSensorCtrl(fd_sensor.get(), V4L2_CID_ANALOGUE_GAIN, 200,  "analogue_gain");
+        validSensorCtrl(fd_sensor.get(), V4L2_CID_VFLIP,         0,    "vflip");
     }
 
     // ── 3) 포맷 설정 ────────────────────────────────────────

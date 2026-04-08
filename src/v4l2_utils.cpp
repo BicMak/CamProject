@@ -24,6 +24,34 @@ bool setSensorCtrl(int fd, int id, int value, const char* name) {
 }
 
 /**
+ * @brief V4L2 디바이스의 센서 컨트롤값과 셋업값을 검증
+ *
+ * @param fd    V4L2 디바이스 파일 디스크립터
+ * @param id    읽을 컨트롤 ID (V4L2_CID_* 상수)
+ * @param value 설정할 값
+ * @param name  로그 출력에 사용할 컨트롤 이름 문자열
+ * @return      성공 시 컨트롤 현재 값, ioctl 실패 시 -1
+ */
+int validSensorCtrl(int fd, int id, 
+                    int value, const char* name) {
+    v4l2_control ctrl{};
+    ctrl.id = id;
+    if (::ioctl(fd, VIDIOC_G_CTRL, &ctrl) < 0) {
+        perror(name);
+        return false;
+    }
+    if(ctrl.value == value){
+        printf("  [GET] %s=%d\n", name, ctrl.value);
+        return ctrl.value;
+    }
+    else{
+        fprintf(stderr, " [ERROR] Invalid value for %s: %d\n", name, ctrl.value);
+        return -1;
+    }
+
+}
+
+/**
  * @brief V4L2 디바이스의 센서 컨트롤 현재 값을 읽어온다.
  *
  * @param fd    V4L2 디바이스 파일 디스크립터
@@ -41,6 +69,8 @@ int getSensorCtrl(int fd, int id, const char* name) {
     printf("  [GET] %s=%d\n", name, ctrl.value);
     return ctrl.value;
 }
+
+
 
 /**
  * @brief V4L2 디바이스 unicam의 이미지 설정을 함
@@ -84,7 +114,6 @@ bool setCaptureFormat(int fd, unsigned w, unsigned h,
 
     return true;
 }
-
 
 
 /**
@@ -137,6 +166,7 @@ bool setCaptureFormat(int fd, unsigned w, unsigned h,
 
     return buffers;
 }
+
 
 /**
  * @brief 본격 캡쳐이전에 워밍업

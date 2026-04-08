@@ -43,14 +43,25 @@ struct MmapBuffer {
 bool setSensorCtrl(int fd, int id, int value, const char* name);
 
 /**
- * @brief V4L2 디바이스의 센서 컨트롤 현재 값을 읽어온다.
+ * @brief V4L2 디바이스의 센서 컨트롤값과 기대값을 비교하여 검증한다.
  *
  * @param fd    V4L2 디바이스 파일 디스크립터
  * @param id    읽을 컨트롤 ID (V4L2_CID_* 상수)
+ * @param value 기대하는 값 (실제 읽은 값과 비교)
  * @param name  로그 출력에 사용할 컨트롤 이름 문자열
- * @return      성공 시 컨트롤 현재 값, ioctl 실패 시 -1
+ * @return      일치 시 컨트롤 현재 값, 불일치 또는 ioctl 실패 시 -1
  */
-int  getSensorCtrl(int fd, int id, const char* name);
+int  validSensorCtrl(int fd, int id, int value, const char* name);
+
+/**
+ * @brief V4L2 디바이스의 센서 컨트롤 현재 값을 읽어온다.
+ *
+ * @param fd           V4L2 디바이스 파일 디스크립터
+ * @param id           읽을 컨트롤 ID (V4L2_CID_* 상수)
+ * @param target_name  로그 출력에 사용할 컨트롤 이름 문자열
+ * @return             성공 시 컨트롤 현재 값, ioctl 실패 시 -1
+ */
+int  getSensorCtrl(int fd, int id, const char* target_name);
 
 /**
  * @brief V4L2 디바이스 unicam의 이미지 포맷을 설정한다.
