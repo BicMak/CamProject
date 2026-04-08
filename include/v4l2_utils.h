@@ -25,54 +25,54 @@ private:
     int fd_;
 };
 
-// ── mmap 버퍼 정보 ──────────────────────────────────────────
+// ── mmap buffer info ────────────────────────────────────────
 struct MmapBuffer {
     void*  start  = nullptr;
     size_t length = 0;
 };
 
 /**
- * @brief V4L2 디바이스의 센서 컨트롤 값을 설정한다.
+ * @brief Set a sensor control value on a V4L2 device.
  *
- * @param fd    V4L2 디바이스 파일 디스크립터
- * @param id    설정할 컨트롤 ID (V4L2_CID_* 상수)
- * @param value 설정할 값
- * @param name  로그 출력에 사용할 컨트롤 이름 문자열
- * @return      성공 시 true, ioctl 실패 시 false
+ * @param fd    V4L2 device file descriptor
+ * @param id    Control ID to set (V4L2_CID_* constant)
+ * @param value Value to set
+ * @param name  Control name string used for log output
+ * @return      true on success, false if ioctl fails
  */
 bool setSensorCtrl(int fd, int id, int value, const char* name);
 
 /**
- * @brief V4L2 디바이스의 센서 컨트롤값과 기대값을 비교하여 검증한다.
+ * @brief Verify a V4L2 sensor control value against an expected value.
  *
- * @param fd    V4L2 디바이스 파일 디스크립터
- * @param id    읽을 컨트롤 ID (V4L2_CID_* 상수)
- * @param value 기대하는 값 (실제 읽은 값과 비교)
- * @param name  로그 출력에 사용할 컨트롤 이름 문자열
- * @return      일치 시 컨트롤 현재 값, 불일치 또는 ioctl 실패 시 -1
+ * @param fd    V4L2 device file descriptor
+ * @param id    Control ID to read (V4L2_CID_* constant)
+ * @param value Expected value (compared against what was read)
+ * @param name  Control name string used for log output
+ * @return      Current control value on match, -1 on mismatch or ioctl failure
  */
 int  validSensorCtrl(int fd, int id, int value, const char* name);
 
 /**
- * @brief V4L2 디바이스의 센서 컨트롤 현재 값을 읽어온다.
+ * @brief Read the current value of a V4L2 sensor control.
  *
- * @param fd           V4L2 디바이스 파일 디스크립터
- * @param id           읽을 컨트롤 ID (V4L2_CID_* 상수)
- * @param target_name  로그 출력에 사용할 컨트롤 이름 문자열
- * @return             성공 시 컨트롤 현재 값, ioctl 실패 시 -1
+ * @param fd           V4L2 device file descriptor
+ * @param id           Control ID to read (V4L2_CID_* constant)
+ * @param target_name  Control name string used for log output
+ * @return             Current control value on success, -1 if ioctl fails
  */
 int  getSensorCtrl(int fd, int id, const char* target_name);
 
 /**
- * @brief V4L2 디바이스 unicam의 이미지 포맷을 설정한다.
+ * @brief Configure the image format on the unicam V4L2 device.
  *
- * @param fd             V4L2 디바이스 파일 디스크립터
- * @param w              설정할 이미지 너비
- * @param h              설정할 이미지 높이
- * @param pixfmt         픽셀 포맷 (V4L2_PIX_FMT_* 상수)
- * @param out_stride     한 줄(Row)을 저장하는 데 사용되는 실제 메모리 폭(바이트 단위), NULL 가능
- * @param out_sizeimage  한 프레임 전체 크기 (Stride * Height, 바이트 단위), NULL 가능
- * @return               성공 시 true, ioctl 실패 시 false
+ * @param fd             V4L2 device file descriptor
+ * @param w              Image width to set
+ * @param h              Image height to set
+ * @param pixfmt         Pixel format (V4L2_PIX_FMT_* constant)
+ * @param out_stride     Actual memory width in bytes used to store one row (may be NULL)
+ * @param out_sizeimage  Total size of one frame (Stride * Height, bytes; may be NULL)
+ * @return               true on success, false if ioctl fails
  */
 bool setCaptureFormat(int video_fd, unsigned w, unsigned h,
                       uint32_t pixfmt,
@@ -80,77 +80,88 @@ bool setCaptureFormat(int video_fd, unsigned w, unsigned h,
                       unsigned* out_sizeimage = nullptr);
 
 /**
- * @brief V4L2 디바이스의 DMA 버퍼를 할당하고 mmap 매핑 후 큐에 등록한다.
+ * @brief Allocate DMA buffers on a V4L2 device, mmap them, and enqueue them.
  *
- * @param fd     V4L2 디바이스 파일 디스크립터
- * @param count  요청할 버퍼 개수
- * @param type   버퍼 타입 (V4L2_BUF_TYPE_VIDEO_CAPTURE 등)
- * @return       성공 시 MmapBuffer 벡터, 실패 시 빈 벡터
+ * @param fd     V4L2 device file descriptor
+ * @param count  Number of buffers to request
+ * @param type   Buffer type (V4L2_BUF_TYPE_VIDEO_CAPTURE, etc.)
+ * @return       Vector of MmapBuffer on success, empty vector on failure
  */
 std::vector<MmapBuffer> allocBuffers(int fd, unsigned count,
                                      v4l2_buf_type type = V4L2_BUF_TYPE_VIDEO_CAPTURE);
 
 /**
- * @brief ISP 입력용 DMABUF 슬롯을 할당한다.
+ * @brief Allocate DMABUF slots for ISP input.
  *
- * @param fd     V4L2 디바이스 파일 디스크립터
- * @param count  요청할 슬롯 개수
- * @return       성공 시 true, ioctl 실패 시 false
+ * @param fd     V4L2 device file descriptor
+ * @param count  Number of slots to request
+ * @return       true on success, false if ioctl fails
  */
 bool allocDmabufSlots(int fd, unsigned count);
 
 /**
- * @brief 스트리밍을 시작하고 워밍업 프레임을 소비한다.
+ * @brief Start V4L2 streaming (VIDIOC_STREAMON).
  *
- * @param fd     V4L2 디바이스 파일 디스크립터
- * @param count  워밍업 시 캡처할 프레임 수
- * @return       성공 시 true, ioctl 실패 시 false
+ * @param fd  V4L2 device file descriptor
+ * @return    true on success, false if ioctl fails
  */
-bool startAndWarmup(int fd, unsigned count);
+bool startStream(int fd);
 
 /**
- * @brief 캡처 완료된 프레임 버퍼를 큐에서 꺼낸다(dequeue).
+ * @brief Warm-up: drain `count` frames via dequeue → enqueue.
+ *        Requires startStream to have been called first. A successful first
+ *        DQBUF also serves as verification that the stream is running.
  *
- * @param fd    V4L2 디바이스 파일 디스크립터
- * @return      dequeue된 v4l2_buffer. VIDIOC_DQBUF 실패 시 type/memory 필드만 설정된 빈 버퍼 반환
+ * @param fd     V4L2 device file descriptor
+ * @param count  Number of frames to drain
+ * @return       true on success, false if ioctl fails
+ */
+bool warmup(int fd, unsigned count);
+
+/**
+ * @brief Dequeue a completed frame buffer from the queue.
+ *
+ * @param fd    V4L2 device file descriptor
+ * @return      The dequeued v4l2_buffer. On VIDIOC_DQBUF failure, returns an
+ *              empty buffer with only type/memory fields set.
  */
 v4l2_buffer grabFrame(int fd);
 
 /**
- * @brief 처리 완료된 버퍼를 V4L2 큐에 반환한다(enqueue).
+ * @brief Return a processed buffer back to the V4L2 queue (enqueue).
  *
- * @param fd    V4L2 디바이스 파일 디스크립터
- * @param buf   반환할 v4l2_buffer (grabFrame으로 얻은 버퍼)
+ * @param fd    V4L2 device file descriptor
+ * @param buf   v4l2_buffer to return (previously obtained via grabFrame)
  */
 void        releaseFrame(int fd, v4l2_buffer& buf);
 
 /**
- * @brief 지정한 버퍼 인덱스의 DMABUF fd를 export한다.
+ * @brief Export the DMABUF fd for a given buffer index.
  *
- * @param fd     V4L2 디바이스 파일 디스크립터
- * @param index  export할 버퍼 인덱스
- * @return       성공 시 DMABUF 파일 디스크립터, 실패 시 -1
+ * @param fd     V4L2 device file descriptor
+ * @param index  Buffer index to export
+ * @return       DMABUF file descriptor on success, -1 on failure
  */
 int exportDmabufFd(int fd, unsigned index);
 
 /**
- * @brief 제로카피 방식으로 ISP에 프레임을 입력하고 처리 완료된 출력 버퍼를 반환한다.
+ * @brief Zero-copy feed a frame into the ISP and return the processed output buffer.
  *
- * @param isp_in_fd   ISP 입력 V4L2 디바이스 파일 디스크립터
- * @param isp_out_fd  ISP 출력 V4L2 디바이스 파일 디스크립터
- * @param ucam_buf    unicam에서 캡처한 입력 버퍼
- * @param dmabuf_fd   ISP 입력에 사용할 DMABUF 파일 디스크립터
- * @return            ISP 출력 큐에서 꺼낸 v4l2_buffer
+ * @param isp_in_fd   ISP input V4L2 device file descriptor
+ * @param isp_out_fd  ISP output V4L2 device file descriptor
+ * @param ucam_buf    Input buffer captured from unicam
+ * @param dmabuf_fd   DMABUF file descriptor used as ISP input
+ * @return            v4l2_buffer dequeued from the ISP output queue
  */
 v4l2_buffer processISP(int isp_in_fd, int isp_out_fd,
                        const v4l2_buffer& ucam_buf, int dmabuf_fd);
 
 /**
- * @brief 스트리밍을 중지하고 mmap 버퍼를 해제한다.
+ * @brief Stop streaming and release mmap buffers.
  *
- * @param fd      V4L2 디바이스 파일 디스크립터
- * @param buffers 해제할 mmap 버퍼 목록 (호출 후 비워짐)
- * @param type    버퍼 타입 (V4L2_BUF_TYPE_VIDEO_CAPTURE 등)
+ * @param fd      V4L2 device file descriptor
+ * @param buffers List of mmap buffers to release (emptied on return)
+ * @param type    Buffer type (V4L2_BUF_TYPE_VIDEO_CAPTURE, etc.)
  */
 void stopAndCleanup(int fd, std::vector<MmapBuffer>& buffers,
                     v4l2_buf_type type = V4L2_BUF_TYPE_VIDEO_CAPTURE);
